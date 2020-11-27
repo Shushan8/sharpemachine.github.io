@@ -1,0 +1,21 @@
+## Command Lines
+
+jekyll new SharpeMachine
+
+cd C:/Users/haykg/SharpeMachine
+
+bundle exec jekyll serve
+
+jekyll serve --draft
+
+permalink: /:categories/:year/:month/:day/:title
+
+permalink: /permalink-name/
+
+
+#Installs dependencies, such as themes I update 
+#in gemfile
+bundle install
+
+#them website https://rubygems.org/ search for
+# jekyll-themes
