@@ -1,0 +1,6 @@
+```{r echo = FALSE}
+knitr::read_chunk(paste0(here::here(), '\\Performance\\performance_of_live_signals.R'))
+```
+
+```{r ShowPerformance, warning = FALSE, echo = FALSE, message = FALSE}
+```

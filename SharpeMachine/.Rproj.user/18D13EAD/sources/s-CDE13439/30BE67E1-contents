@@ -1,0 +1,5 @@
+<html>
+  <body>
+    {%include performance_of_live_signals.html %}
+    </body>
+    </html>
