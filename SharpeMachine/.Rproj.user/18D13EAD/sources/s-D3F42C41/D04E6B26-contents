@@ -10,8 +10,6 @@ By building diversified multifactor portfolio with robust risk management system
 
 SharpeMachine quantitative system is targeting for less volatile portfolio, which is more easily managed and is comfortable for the clients allowing serving their interests better.
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
-
 You can find the source code for Minima at GitHub:
 [jekyll][jekyll-organization] /
 [minima](https://github.com/jekyll/minima)
