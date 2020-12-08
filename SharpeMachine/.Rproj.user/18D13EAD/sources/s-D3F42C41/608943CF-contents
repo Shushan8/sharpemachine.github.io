@@ -1,0 +1,227 @@
+#@knitr ShowPerformance
+library(tidyverse)
+library(PerformanceAnalytics)
+library(cut)
+nest <- nest_legacy
+unnest <- unnest_legacy
+con <- cut::make_connection()
+source(paste0(here::here(), '\\RegularJobs\\local_functions.R'))
+buckets_long_buy <- 5
+buckets_short_buy <- 5
+buckets_long_hold <- 3L
+buckets_short_hold <- 3L
+universe <- 'US Only' # 'US Only' 'All Universe'
+leverage_vector <- list(Long = c(1.92), Short =  c(-1.2))
+marketcapfloor <- 500
+apply_score_change_effect <- FALSE
+rebalancing <- 'month'
+altered_live_signal_history <- FALSE
+is_market_regime_included <- TRUE
+rebalance_method <- 'simple' # 'buyhold'
+
+sprintf("marketcap floor - %s", marketcapfloor)
+sprintf("buckets_long_buy - %s", buckets_long_buy)
+sprintf("buckets_short_buy - %s", buckets_short_buy)
+sprintf("buckets_long_hold - %s", buckets_long_hold)
+sprintf("buckets_short_hold - %s", buckets_short_hold)
+sprintf("apply_score_change_effect - %s", apply_score_change_effect)
+sprintf("altered_live_signal_history - %s", altered_live_signal_history)
+sprintf("is_market_regime_included - %s", is_market_regime_included)
+sprintf("rebalancing - %s", rebalancing)
+sprintf(universe)
+sprintf(as.character(leverage_vector))
+sprintf("rebalance method is - %s", rebalance_method)
+
+portfolio <- get_initial_universe(con, marketcapfloor, rebalancing = rebalancing, only_production_signals = FALSE) %>% 
+        {if(altered_live_signal_history) alter_live_signal_history(., intercept_ = -.0,  con = con) else(.)} %>% 
+        {if(is_market_regime_included)
+                bind_rows(., get_initial_universe(con, marketcapfloor, rebalancing = rebalancing, table = 'model_signals_with_regimes', 
+                                                 only_production_signals = FALSE))
+                else (.)} %>% 
+        extract_regimes()
+
+portfolio_ <- portfolio %>%
+        filter(regime %in% c('All', 'Value_N', 'Value_P', 'Equity_N', 'Equity_P')) %>% 
+        group_by(regime) %>% 
+        nest() %>% 
+        #mutate(data = map(data, ~get_ranking_scores(.x, height_filter = 0.3))) %>% 
+        mutate(data = map(data, ~(group_by(.x, Date_Rebalance, ticker) %>% summarise(score = mean(predict))))) %>% 
+        unnest() %>% 
+        # left_join(current_regimes) %>% 
+        # mutate(probability = if_else(is.na(probability), 1, probability)) %>% 
+        # group_by(Date_Rebalance, ticker) %>%
+        # summarise(score = sum(score * probability) / sum(probability)) %>%
+        # ungroup() %>%
+        {if(apply_score_change_effect) enhance_score_by_score_change_effect(.) else .} %>%
+        shrink_universe(con, universe = universe) %>%
+        {if(rebalance_method == 'simple') get_long_short_portfolios(.,method = 'simple',
+                                                                    buckets_long = buckets_long_buy, 
+                                                                    buckets_short = buckets_short_buy,
+                                                                    grouping = c('Date_Rebalance', 'regime'))
+                else {get_long_short_portfolios(., method = 'buyhold',
+                                                        buckets_long_buy= buckets_long_buy, 
+                                                        buckets_long_hold = buckets_long_hold,
+                                                        buckets_short_buy = buckets_short_buy, 
+                                                        buckets_short_hold = buckets_short_hold, 
+                                                grouping = c('Date_Rebalance', 'regime'))}}
+
+Trading_Dates <- tbl(con, "trading_dates_view")
+
+End_Date <- as.character(Sys.Date())
+
+DBI::dbWriteTable(con, "##portfolio_t", portfolio_, overwrite = TRUE, temporary = TRUE)
+portfolio <- tbl(con, "##portfolio_t")
+
+Date_Grids <- portfolio %>% select(Date_Rebalance) %>% distinct() %>%
+        cut::cross_join(Trading_Dates) %>%
+        group_by(Date_Rebalance) %>%
+        filter(Date_Rebalance < date) %>%
+        summarise(Trading_Date = min(date, na.rm = TRUE)) %>%
+        arrange(Date_Rebalance) %>%
+        ungroup() %>%
+        mutate(Trading_End_Date = lead(Trading_Date)) %>%
+        mutate(Trading_End_Date = if_else(is.na(Trading_End_Date), End_Date, Trading_End_Date))
+
+method <- 'spark'
+
+library(sparklyr)
+sc <- cut::make_spark_connection()
+
+library(arrow)
+total_return <- read_tr_view(method = method, sc, memory = FALSE)
+market_cap <- cut::read_marketcap_view(method = method, sc, memory = FALSE)
+portfolio_with_dates <- portfolio %>% inner_join(Date_Grids)
+
+if(method == 'spark'){
+        copy_to(sc, portfolio_with_dates %>% collect() %>% 
+                        mutate_at(vars(Date_Rebalance, Trading_Date, Trading_End_Date), as.character), name = 'portfolio', overwrite = 'TRUE')
+        portfolio <- tbl(sc, 'portfolio') %>% mutate_at(vars(Date_Rebalance, Trading_Date, Trading_End_Date), as.Date)}
+
+regime_weights <- tibble(regime = c('All', 'Value_N', 'Value_P', 'Equity_N', 'Equity_P'), 
+                         regime_weight = c(0.5, 0.75/4, 0.25/4, 0.25/4, 0.75/4))
+
+copy_to(sc, regime_weights, name = 'regime_weights', overwrite = TRUE)
+regime_weights <- tbl(sc, 'regime_weights')
+
+stock_weights <- portfolio %>% 
+        portfolio_optimizer(FUN = equal_weight_market_weight, market_cap,max_cap_long = 0.03,
+                            max_cap_short =  0.015, scale_weights = TRUE, grouping = c("Date_Rebalance", "portfolio", "regime")) %>% 
+        merge_regime_portfolios(regime_weights)
+
+stock_return_series <- stock_weights %>%
+        inner_join(total_return) %>%
+        filter(date >= Trading_Date & date <= Trading_End_Date) %>%
+        group_by(portfolio, ticker, Date_Rebalance) %>%
+        arrange(date) %>%
+        mutate(RI = RI / dplyr::first(RI)) %>%
+        ungroup() %>%
+        collect()
+
+return_series <- get_return_series(stock_return_series) %>%
+        {if(apply_score_change_effect) filter(., date >= '2019-01-03') else (.)}
+
+df <- stock_return_series %>%
+        select(Date_Rebalance, ticker, portfolio, initial_weight) %>% distinct()
+
+# df %>% group_by(Date_Rebalance, portfolio) %>% summarise(n = n(), w = mean(initial_weight), 
+#                                                          w_s = sum(initial_weight)) %>% 
+#         mutate(tw = n * w) %>%  
+#         ggplot() + geom_line(aes(x = Date_Rebalance, y = w_s, color = as.factor(portfolio)))
+
+spx <- tbl(con, 'spx_daily') %>%
+        mutate(return = price / lag(price, order_by = date) - 1) %>%
+        filter(date >= '2004-01-01') %>% collect() %>%
+        inner_join(return_series %>% select(date) %>% distinct())
+
+s <- tibble(portfolios = c('Default_192_120')) %>%
+        mutate(Long = leverage_vector[['Long']], Short = leverage_vector[['Short']]) %>%
+        gather(portfolio, weight, Long, Short) %>%
+        group_by(portfolios) %>%
+        nest(.key = 'leverage_initial') %>%
+        mutate(portfolio_return_unlevered = map(leverage_initial, ~aggregate_portfolio(return_series, .x))) %>%
+        cut::cross_join(tibble(vol_threshold = c(0.45, 100))) %>% 
+        mutate(leverage = pmap(list(leverage_initial, portfolio_return_unlevered, vol_threshold), ~adjust_leverage(..1, ..2,
+                                                                                      vol_threshold = ..3, 
+                                                                                      historical_window_days = 2,
+                                                                                      memory_trading_days = 11))) %>%
+        mutate(portfolio_return = map(leverage, ~aggregate_portfolio(return_series, .x))) %>%
+        mutate(excess_margin = map(leverage, ~get_excess_margin(stock_return_series, .x))) %>% 
+        mutate(pair = map(portfolio_return, ~(left_join(.x, spx %>% select(date, return) %>% rename(spx = return))))) %>%
+        mutate(performance = map(pair, ~(na.omit(.x) %>% make_performance_table))) %>%
+        mutate(summary_table = map(pair, ~make_annualized_return_table(.x, freq = 'month'))) %>%
+        mutate(drawdowns = map(pair, plot_drawdown))  %>%
+        mutate(wealth = map(pair, plot_wealth_index)) %>%
+        mutate(rolling_returns = map(pair, plot_rolling_returns)) %>%
+        mutate(sharpe = map(portfolio_return, 
+                            ~PerformanceAnalytics::table.AnnualizedReturns(xts::xts(x = (.x$return), order.by = .x$date))))
+
+monthly_trading_costs <- get_monthly_trading_costs(stock_return_series, leverage = s$leverage[[1]]
+                                                   , bid_ask_spread = 0.0025)
+
+sprintf("annualized trading costs are %s" , 12 * monthly_trading_costs)
+
+s$sharpe[[1]]
+s$drawdowns[[1]]
+s$summary_table[[1]]
+s$performance[[1]]
+s$wealth[[1]]
+s$wealth[[2]]
+s$rolling_returns[[1]]
+s$rolling_returns[[2]]
+s$leverage[[1]] %>% plotly::plot_ly() %>% plotly::add_lines(x = ~date, y = ~sd) %>% plotly::add_markers(x = ~date, y = ~sd) %>% 
+        plotly::add_lines(x = ~date, y = ~0.45)
+s$leverage[[1]] %>% plotly::plot_ly(x = ~date, y = ~leverage) %>% plotly::add_lines()
+#s$excess_margin[[1]]
+
+DBI::dbWriteTable(con, 'portfolio_return_live_signals', s$portfolio_return_unlevered[[1]] %>% mutate(timestamp = Sys.time()) %>% 
+                          mutate_at(vars(Date_Rebalance, date), as.character) %>% 
+                          mutate_at(vars(Date_Rebalance, date), as.Date) , append = TRUE)
+
+#leverage <- get_dynamic_weights(return_series, spx, leverage = 0.5)
+
+rs <- return_series %>% mutate(date = as.Date(date)) %>%
+        select(-Date_Rebalance) %>%
+        bind_rows(spx %>%
+                           select(date, return) %>%
+                           mutate(portfolio = 'S&P 500') %>% rename(portfolio_return = return)) %>%
+        group_by(portfolio) %>%
+        mutate(Return = cumprod(1 + portfolio_return)) %>%
+        ungroup() 
+
+rs %>%
+        plotly::plot_ly() %>% plotly::add_lines(x = ~ date, y = ~ Return, color = ~ as.factor(portfolio)) %>% 
+        plotly::layout(title = "Long/Short Total Return", 
+                       xaxis = list(title = ""), yaxis = list(title = "", 
+                                                              tickformat = ",.2%"), legend = list(orientation = "h"))
+
+rs %>% select(-portfolio_return) %>% 
+        spread(portfolio, Return) %>%
+        mutate(relative_performance = Long / Short) %>%
+        plotly::plot_ly() %>% plotly::add_lines(x = ~ date, y = ~ relative_performance) %>% 
+        plotly::layout(title = "Relative Performance", 
+                       xaxis = list(title = ""), yaxis = list(title = "", 
+                                                              tickformat = ",.2%"), legend = list(orientation = "h"))
+
+# current_regimes %>% 
+#         mutate(is_vix = case_when(regime %in% c('Mid_VIX', 'Low_VIX', 'High_VIX') ~ 'VIX',
+#                                   regime %in% c('Mid_INF', 'Low_INF', 'High_INF') ~ 'INF',
+#                                   regime %in% c('Mid_XAUVIX', 'Low_XAUVIX', 'High_XAUVIX') ~ 'XAUVIX',
+#                                   regime %in% c('Momentum_P', 'Momentum_N') ~ 'Momentum',
+#                                   regime %in% c('Value_P', 'Value_N') ~ 'Value',
+#                                   regime %in% c('Vol_P', 'Vol_N') ~ 'Volatility',
+#                                   TRUE ~ "Bull-Bear")) %>%  
+#         ggplot() + geom_line(aes(x = Date_Rebalance, color = regime, y = probability), size = 2) + 
+#         facet_wrap(~is_vix)
+        
+
+attribution <- make_stock_attribution_table(stock_return_series, s$leverage_initial[[1]])
+
+DT::datatable(attribution, filter = 'top', options = list(
+        pageLength = 20, autoWidth = TRUE
+)) %>%
+        DT::formatPercentage(c('return_attribution', "stock_return", 'weight'), 2)
+
+sparklyr::spark_disconnect(sc) 
+        
+        
+

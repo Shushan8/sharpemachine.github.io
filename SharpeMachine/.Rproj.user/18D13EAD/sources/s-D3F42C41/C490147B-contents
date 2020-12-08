@@ -1,0 +1,36 @@
+annual_return <- 0.09
+annual_volatility <- 0.3
+trading_days_in_a_year <- 250
+years <- 10
+n_of_trials <- 10000
+library(tidyverse)
+
+df <- tibble(returns = rnorm(n_of_trials*trading_days_in_a_year*years, 
+                             annual_return/trading_days_in_a_year, annual_volatility/sqrt(trading_days_in_a_year))) %>% 
+  mutate(days = rep(1:(trading_days_in_a_year*years), n_of_trials)) %>% 
+  mutate(index = ntile(n = 10000)) %>% 
+  group_by(index) %>% 
+  mutate(RI = cumprod(1 + returns)) %>%
+  ungroup()
+
+get_tr_values <- function(year){
+  df %>% 
+    filter(days <= 250 * year) %>% 
+    group_by(index) %>% 
+    filter(days == max(days)) %>% 
+    ungroup()
+}
+
+tibble(years = c(1, 3, 5, 10)) %>% 
+  mutate(data = map(years, get_tr_values)) %>% 
+  mutate(years = as.character(years)) %>% 
+  unnest_legacy() %>% 
+  ggplot() + geom_histogram(aes(x = RI)) + facet_wrap(~years)
+  
+
+df %>% 
+  filter(days <= 250 * 1) %>% 
+  filter(index <= 2) %>% 
+  group_by(index) %>% 
+  summarise(max_drawdown = PerformanceAnalytics::maxDrawdown(xts::as.xts(returns, order.by = as.Date(days, origin = '2020-01-01'))))
+  
