@@ -18,11 +18,10 @@ to a rescue, but still how confident you can be that your well earned capital
 will not be affected? 
 
 Let's have a simple exercise suppose we are investing in a stock market which
-has a historical annual return of 9% and annual volatility of 18%. Pretty much 
+has an expected annual return of 9% and annual volatility of 18%. Pretty much 
 looks like a large-cap US stock market. And suppose we generate hundreds of 
 alternative universes where the returns might play out differently.  What we 
-want to see how much you will end up with at the end of the 1st year, 5th year,
-and 10th year.
+want to see how much you will end up with at the end of the 10th year.
 
 Below is the possible distribution of the terminal values of 1M invested capital.
 
@@ -75,7 +74,8 @@ get_max_drawdown_plot <- function(year){
   x %>% 
     plotly::plot_ly(x = ~max_drawdown, type = "histogram") %>% 
       plotly::layout(title = paste0("Maximum Drawdown Distribution, Median is ", formattable::percent(m)), 
-                 xaxis = list(title = sprintf("Maximum Drawdown Over the %s Year Investment Horizon", year)), yaxis = list(title = ""), legend = list(orientation = "h"))  
+                 xaxis = list(title = sprintf("Maximum Drawdown Over the %s Year Investment Horizon", year),
+                              tickformat = ",.2%"), yaxis = list(title = ""), legend = list(orientation = "h"))  
 }
 
 ```
@@ -86,14 +86,15 @@ get_max_drawdown_plot <- function(year){
 get_tr_plot(10)
 ```
 ---
-As you see it is far from certain that the investments will be recouped, 
-especially in a shorter period. The distribution at the end the investment horizon has a wide range.
+As you see it is not certain that the investments will be recouped.
+The distribution at the end the investment horizon has a wide range.
 Note that in real world the investment distributions have fat tails and left skew. 
 This means that large movements to the downside which are missing on a normal distribution are more likely 
 to happen with real portfolios.
 
 Moreover, although the annual expected return is 9%, the effective return is lower.
-What is the reason behind this? Because if you are not lucky and happened to have a negative return the subsequent return should be much larger to offset the losses. 
+Annual increase of 9% would make 1M to 2.37M.
+What is the reason behind this? It turns out that if you are not lucky and happened to have a negative return the subsequent return should be much larger to offset the losses. 
 For example if your initial $100 investment had -10% return and then +10%, 
 the average is 0%, but you lost $1 as
 10% increase was on a lower base of $90.
@@ -110,7 +111,7 @@ get_max_drawdown_plot(10)
 
 ---
 
-Naturally, longer the investment horizon more likely your portfolio will encounter a large drawdown possibly forcing you to take action, be it a closing the position or doubling down. Those actions of increased trading activity, non systematic changes of the risk profile, and added emotional burden will decrease the potential return of your portfolio.
+Naturally, longer the investment horizon more likely your portfolio will encounter a large drawdown possibly forcing you to take action, be it a closing the position or increasing the position in a hope of reversal. Those actions of increased trading activity, non systematic changes of the risk profile, and added emotional burden will decrease the potential return of your portfolio.
 
 ## Low Volatility Portfolio
 Now let's look at the portfolio which has two times less annual volatility of 10% and slightly lower annual return of 8%.
@@ -136,9 +137,9 @@ get_tr_plot(10)
 
 ---
 
-Les volatile portfolio has lower share of negative outcomes. It is less than 1% over the 10 years compared to 7%-8% when the volatility is closer to the market. Even the cumulative return over 10 year is higher despite 1% lower average return. 
+Less volatile portfolio has lower share of negative outcomes. It is less than 1% over the 10 years compared to 7%-8% when the volatility is closer to the market. Even the cumulative return over 10 year is higher despite 1% lower average return. 
 
-Finally, look at the drawdown charts below.
+Finally, look at the drawdown chart below.
 
 ---
 
