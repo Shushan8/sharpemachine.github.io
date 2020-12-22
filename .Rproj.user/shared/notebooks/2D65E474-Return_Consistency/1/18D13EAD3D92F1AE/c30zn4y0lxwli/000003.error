@@ -1,1 +1,0 @@
-{"frames":[{"func":"dev.off()","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0},{"func":"stop(\"cannot shut down device 1 (the null device)\")","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error in dev.off() : cannot shut down device 1 (the null device)\n"}

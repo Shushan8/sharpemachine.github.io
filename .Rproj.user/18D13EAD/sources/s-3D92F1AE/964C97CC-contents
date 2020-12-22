@@ -93,9 +93,7 @@ theme_set(theme_bw() +
     panel.background = element_blank()) 
   )
 
-png("tr_plot.png")
 get_tr_plot(10)
-dev.off()
 ```
 ---
 As you see it is not certain that the investments will be recouped.
