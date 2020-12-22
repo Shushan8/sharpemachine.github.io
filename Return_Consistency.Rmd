@@ -1,5 +1,6 @@
 ---
 output: html_document
+always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -56,11 +57,12 @@ get_tr_plot <- function(year){
   
   
   x %>% 
-  plotly::plot_ly(x = ~1000000 * RI, type = "histogram") %>% 
-      plotly::layout(title = paste0("Terminal Value Distribution, Median is ", formattable::percent(m), "\n",
-                                    "Share of Negative Return Outcomes is ", formattable::percent(s)), 
-                 xaxis = list(title = paste0("Terminal Value in millions after ", year, " Year"), 
-                              yaxis = list(title = ""), legend = list(orientation = "h")))
+    ggplot() + geom_histogram(aes(x = 1000000 * RI)) +
+    ggtitle(paste0("Terminal Value Distribution, Median is ", formattable::percent(m), "\n", "\n",
+                                     "Share of Negative Return Outcomes is ", formattable::percent(s))) +
+    xlab(paste0("Terminal Value after ", year, " Year")) +
+    ylab("")+
+    scale_x_continuous(labels = scales::dollar)
 }
 
 get_max_drawdown_plot <- function(year){
@@ -72,10 +74,10 @@ get_max_drawdown_plot <- function(year){
   m <- median(x$max_drawdown)
   
   x %>% 
-    plotly::plot_ly(x = ~max_drawdown, type = "histogram") %>% 
-      plotly::layout(title = paste0("Maximum Drawdown Distribution, Median is ", formattable::percent(m)), 
-                 xaxis = list(title = sprintf("Maximum Drawdown Over the %s Year Investment Horizon", year),
-                              tickformat = ",.2%"), yaxis = list(title = ""), legend = list(orientation = "h"))  
+    ggplot() + geom_histogram(aes(x = max_drawdown)) +
+    ggtitle(paste0("Maximum Drawdown Distribution, Median is ", formattable::percent(m))) +
+    xlab(sprintf("Maximum Drawdown Over the %s Year Investment Horizon", year)) +
+    scale_x_continuous(labels = scales::percent)
 }
 
 ```
@@ -83,6 +85,14 @@ get_max_drawdown_plot <- function(year){
 
 
 ```{r tr_plots_spx, warnings = FALSE, message = FALSE}
+theme_set(theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) 
+  )
+
 get_tr_plot(10)
 ```
 ---
@@ -153,7 +163,10 @@ Maximum drawdowns of the less volatile portfolio are much lower.
 A person carrying such a portfolio will have better emotional and financial wellbeing watching it over the turbulent period. 
 
 ## Final Remarks
-The ratio of expected annual returns over risk free return divided by the expected volatility is the measure you can use to assess risk-adjusted return. It is called Sharpe Ratio. Higher the Sharpe Ratio - better.
+The ratio of expected annual returns over risk free return divided by the expected volatility is the measure you can use to assess risk-adjusted return, assuming that the expected return does not have asymmetric and fat tails. It is called Sharpe Ratio. Higher the Sharpe Ratio - better.
+$$
+SR = {\frac {R - RF}{\sigma}}
+$$
 
 To sum up, a rule of thumb is that portfolios with lower volatility are better as they provide more stable, higher returns and less chance of overtrading and other actions triggered by emotional reaction. 
 
