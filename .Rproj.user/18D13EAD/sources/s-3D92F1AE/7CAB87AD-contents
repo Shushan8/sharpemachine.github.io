@@ -1,11 +1,10 @@
 ---
-output: html_document
-always_allow_html: yes
+layout: post
+title:  "Return Consistency"
+date:   2020-12-21 01:38:07 -0600
+categories: blog educational
+Author: Hayk Grigoryan, CFA
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
-```
 
 ## Do you sleep well and stay invested?
 
@@ -27,76 +26,9 @@ want to see how much you will end up with at the end of the 10th year.
 Below is the possible distribution of the terminal values of 1M invested capital.
 
 ---
-```{r get_data}
-library(tidyverse)
-annual_return <- 0.09
-annual_volatility <- 0.18
-trading_days_in_a_year <- 250
-years <- 10
-n_of_trials <- 10000
 
-df <- tibble(returns = rnorm(n_of_trials*trading_days_in_a_year*years, 
-                             annual_return/trading_days_in_a_year, 
-                             annual_volatility/sqrt(trading_days_in_a_year))) %>% 
-  mutate(days = rep(1:(trading_days_in_a_year*years), n_of_trials)) %>% 
-  mutate(index = ntile(n = n_of_trials)) %>% 
-  group_by(index) %>% 
-  mutate(RI = cumprod(1 + returns)) %>%
-  ungroup()
+![](/images/return_consistency/tr_plot.png)
 
-get_tr_plot <- function(year){
-  x <- df %>% 
-  filter(days <= 250 * year) %>% 
-  group_by(index) %>% 
-  filter(days == max(days)) %>% 
-  ungroup()
-  
-  m <- median(x$RI)
-  
-  s <- mean(x$RI <= 1)
-  
-  
-  x %>% 
-    ggplot() + geom_histogram(aes(x = 1000000 * RI)) +
-    ggtitle(paste0("Terminal Value Distribution, Median is ", formattable::percent(m), "\n", "\n",
-                                     "Share of Negative Return Outcomes is ", formattable::percent(s))) +
-    xlab(paste0("Terminal Value after ", year, " Year")) +
-    ylab("")+
-    scale_x_continuous(labels = scales::dollar)
-}
-
-get_max_drawdown_plot <- function(year){
-  x <- df %>% 
-  filter(days <= 250 * year) %>% 
-  group_by(index) %>% 
-  summarise(max_drawdown = -PerformanceAnalytics::maxDrawdown(xts::as.xts(returns, order.by = as.Date(days, origin = '2020-01-01')))) 
-  
-  m <- median(x$max_drawdown)
-  
-  x %>% 
-    ggplot() + geom_histogram(aes(x = max_drawdown)) +
-    ggtitle(paste0("Maximum Drawdown Distribution, Median is ", formattable::percent(m))) +
-    xlab(sprintf("Maximum Drawdown Over the %s Year Investment Horizon", year)) +
-    scale_x_continuous(labels = scales::percent)
-}
-
-```
-
-
-
-```{r tr_plots_spx, warnings = FALSE, message = FALSE}
-theme_set(theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.border = element_blank(),
-    panel.background = element_blank()) 
-  )
-
-png("tr_plot.png")
-get_tr_plot(10)
-dev.off()
-```
 ---
 As you see it is not certain that the investments will be recouped.
 The distribution at the end the investment horizon has a wide range.
@@ -117,9 +49,7 @@ drawdowns will put a heavy doubt in your mind whether the investment strategy is
 
 ---
 
-```{r drawdown_plots_spx}
-get_max_drawdown_plot(10)
-```
+![](/images/return_consistency/maxdrawdown_plot.png)
 
 ---
 
@@ -130,22 +60,7 @@ Now let's look at the portfolio which has two times less annual volatility of 10
 
 ---
 
-```{r portfolio_parameters}
-annual_return <- 0.08
-annual_volatility <- 0.1
-
-df <- tibble(returns = rnorm(n_of_trials*trading_days_in_a_year*years, 
-                             annual_return/trading_days_in_a_year, 
-                             annual_volatility/sqrt(trading_days_in_a_year))) %>% 
-  mutate(days = rep(1:(trading_days_in_a_year*years), n_of_trials)) %>% 
-  mutate(index = ntile(n = n_of_trials)) %>% 
-  group_by(index) %>% 
-  mutate(RI = cumprod(1 + returns)) %>%
-  ungroup()
-
-get_tr_plot(10)
-```
-
+![](/images/return_consistency/tr_plot_portfolio.png)
 
 ---
 
@@ -155,9 +70,7 @@ Finally, look at the drawdown chart below.
 
 ---
 
-```{r drawdown_plots_portfolio}
-get_max_drawdown_plot(10)
-```
+![](/images/return_consistency/maxdrawdown_plot_portfolio.png)
 
 ---
 
@@ -166,9 +79,7 @@ A person carrying such a portfolio will have better emotional and financial well
 
 ## Final Remarks
 The ratio of expected annual returns over risk free return divided by the expected volatility is the measure you can use to assess risk-adjusted return, assuming that the expected return does not have asymmetric and fat tails. It is called Sharpe Ratio. Higher the Sharpe Ratio - better.
-$$
-SR = {\frac {R - RF}{\sigma}}
-$$
 
-To sum up, a rule of thumb is that portfolios with lower volatility are better as they provide more stable, higher returns and less chance of overtrading and other actions triggered by emotional reaction. 
+$$SR$$
 
+$$\SR = {\frac {R - RF}{\sigma}}\$$

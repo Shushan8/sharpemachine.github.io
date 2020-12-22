@@ -3,22 +3,23 @@
     "path": "C:/SharpeMachine/Hayk86.github.io/Return_Consistency.Rmd",
     "project_path": "Return_Consistency.Rmd",
     "type": "r_markdown",
-    "hash": "4087790764",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1607483351001.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
-        "cursorPosition": "163,0",
-        "scrollLine": "153"
+        "cursorPosition": "161,0",
+        "scrollLine": "146",
+        "last_setup_crc32": "3D92F1AE1681dfc1"
     },
     "folds": "",
     "lastKnownWriteTime": 1608604161,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1608604161829,
+    "last_content_update": 1608607170956,
     "read_only": false,
     "read_only_alternatives": []
 }

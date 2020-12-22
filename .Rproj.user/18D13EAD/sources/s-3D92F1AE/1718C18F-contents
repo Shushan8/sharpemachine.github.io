@@ -1,4 +1,86 @@
-rmd_tempfile <- tempfile(tmpdir = ".", fileext = ".Rmd")
-file.copy("Return_Consistency.Rmd", rmd_tempfile)
-rmarkdown::render(rmd_tempfile, output_dir = ".", output_file = "Return_Consistency.html")
-file.remove(rmd_tempfile)
+library(tidyverse)
+annual_return <- 0.09
+annual_volatility <- 0.18
+trading_days_in_a_year <- 250
+years <- 10
+n_of_trials <- 10000
+
+df <- tibble(returns = rnorm(n_of_trials*trading_days_in_a_year*years, 
+                             annual_return/trading_days_in_a_year, 
+                             annual_volatility/sqrt(trading_days_in_a_year))) %>% 
+  mutate(days = rep(1:(trading_days_in_a_year*years), n_of_trials)) %>% 
+  mutate(index = ntile(n = n_of_trials)) %>% 
+  group_by(index) %>% 
+  mutate(RI = cumprod(1 + returns)) %>%
+  ungroup()
+
+get_tr_plot <- function(year){
+  x <- df %>% 
+    filter(days <= 250 * year) %>% 
+    group_by(index) %>% 
+    filter(days == max(days)) %>% 
+    ungroup()
+  
+  m <- median(x$RI)
+  
+  s <- mean(x$RI <= 1)
+  
+  
+  x %>% 
+    ggplot() + geom_histogram(aes(x = 1000000 * RI)) +
+    ggtitle(paste0("Terminal Value Distribution, Median is ", formattable::percent(m), "\n", "\n",
+                   "Share of Negative Return Outcomes is ", formattable::percent(s))) +
+    xlab(paste0("Terminal Value after ", year, " Year")) +
+    ylab("")+
+    scale_x_continuous(labels = scales::dollar)
+}
+
+get_max_drawdown_plot <- function(year){
+  x <- df %>% 
+    filter(days <= 250 * year) %>% 
+    group_by(index) %>% 
+    summarise(max_drawdown = -PerformanceAnalytics::maxDrawdown(xts::as.xts(returns, order.by = as.Date(days, origin = '2020-01-01')))) 
+  
+  m <- median(x$max_drawdown)
+  
+  x %>% 
+    ggplot() + geom_histogram(aes(x = max_drawdown)) +
+    ggtitle(paste0("Maximum Drawdown Distribution, Median is ", formattable::percent(m))) +
+    xlab(sprintf("Maximum Drawdown Over the %s Year Investment Horizon", year)) +
+    scale_x_continuous(labels = scales::percent)
+}
+theme_set(theme_bw() +
+            theme(axis.line = element_line(colour = "black"),
+                  panel.grid.major = element_blank(),
+                  panel.grid.minor = element_blank(),
+                  panel.border = element_blank(),
+                  panel.background = element_blank()) 
+)
+
+png("tr_plot.png")
+get_tr_plot(10)
+dev.off()
+
+png("maxdrawdown_plot.png")
+get_max_drawdown_plot(10)
+dev.off()
+
+annual_return <- 0.08
+annual_volatility <- 0.1
+
+df <- tibble(returns = rnorm(n_of_trials*trading_days_in_a_year*years, 
+                             annual_return/trading_days_in_a_year, 
+                             annual_volatility/sqrt(trading_days_in_a_year))) %>% 
+  mutate(days = rep(1:(trading_days_in_a_year*years), n_of_trials)) %>% 
+  mutate(index = ntile(n = n_of_trials)) %>% 
+  group_by(index) %>% 
+  mutate(RI = cumprod(1 + returns)) %>%
+  ungroup()
+
+png("tr_plot_portfolio.png")
+get_tr_plot(10)
+dev.off()
+
+png("maxdrawdown_plot_portfolio.png")
+get_max_drawdown_plot(10)
+dev.off()
