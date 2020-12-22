@@ -1,0 +1,4 @@
+rmd_tempfile <- tempfile(tmpdir = ".", fileext = ".Rmd")
+file.copy("Return_Consistency.Rmd", rmd_tempfile)
+rmarkdown::render(rmd_tempfile, output_dir = ".", output_file = "Return_Consistency.html")
+file.remove(rmd_tempfile)
