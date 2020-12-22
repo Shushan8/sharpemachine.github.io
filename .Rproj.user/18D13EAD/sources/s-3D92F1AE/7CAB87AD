@@ -1,7 +1,7 @@
 {
     "id": "7CAB87AD",
-    "path": "C:/SharpeMachine/Hayk86.github.io/SharpeMachine/_posts/2020-12-21-test.markdown",
-    "project_path": "SharpeMachine/_posts/2020-12-21-test.markdown",
+    "path": "C:/SharpeMachine/Hayk86.github.io/SharpeMachine/_posts/2020-12-21-test.md",
+    "project_path": "SharpeMachine/_posts/2020-12-21-test.md",
     "type": "text",
     "hash": "0",
     "contents": "",
@@ -10,15 +10,15 @@
     "source_on_save": false,
     "relative_order": 4,
     "properties": {
-        "cursorPosition": "82,6",
+        "cursorPosition": "75,0",
         "scrollLine": "55"
     },
     "folds": "",
-    "lastKnownWriteTime": 1608607683,
+    "lastKnownWriteTime": 1608609870,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1608607683325,
+    "last_content_update": 1608609870226,
     "read_only": false,
     "read_only_alternatives": []
 }
