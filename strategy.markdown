@@ -10,4 +10,4 @@ In addition, dynamic risk management system which adjusts the risk level given t
 
 The strategy has long and short positions that limits the exposure to the pure equity factor, but adds complexity managing short sales. However the improvement in risk profile is more than justified. In case the client is limited to use long only options, we provide long only solutions with less risk than the passive investments in the market indices. 
 
-The system opens simultaneosly positions in 150-350 individual securities and no more than 3% of the original capital is invested in any of the stock. Therefore, any risk with individual stock is very limited and is affecting the portfolio performance materially. 
+The system opens simultaneosly positions in 150-350 individual securities and no more than 3% of the original capital is invested in any of the stock. Therefore, any risk with individual stock is very limited and is not affecting the portfolio performance materially. 
