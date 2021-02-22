@@ -13,7 +13,7 @@ permalink: /contact/
             <input type="text" name="name" class="form-control" id="exampleInputName" placeholder="Enter your name" required="required">
           </div>
             <div class="form-group">
-            <textarea rows="4" cols="50" name="comment" class="form-control" > Enter text here...</textarea>
+            <textarea rows="4" cols="50" name="comment" class="form-control" placeholder="Enter text here..." > </textarea>
            </div>
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
