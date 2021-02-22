@@ -4,11 +4,7 @@ title: Contact
 permalink: /contact/
 ---
 
-<html>
-   <head>
-       <link href="site/new.css" rel="stylesheet">
-   </head>
-          <body>
+
              <form accept-charset="UTF-8" action="https://getform.io/{YOUR_UNIQUE_FORM_ENDPOINT}" method="POST" enctype="multipart/form-data" target="_blank">
                     <div class="form-group">
                       <label for="exampleInputEmail1" required="required">Email address</label>
@@ -20,5 +16,3 @@ permalink: /contact/
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
            </form>
-   </body>
-</html>
