@@ -14,6 +14,7 @@ permalink: /contact/
                <br> -->
             <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
           </div>
+          <br>
             <div class="form-group">
             <textarea rows="4" cols="50" name="comment" class="form-control" placeholder="Enter text here..." ></textarea>
            </div>
