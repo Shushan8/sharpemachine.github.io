@@ -9,6 +9,7 @@ permalink: /contact/
                <br>  -->
             <input type="text" name="name" class="form-control" id="exampleInputName" placeholder="Enter your name" required="required">
           </div>
+          <br>
          <div class="form-group">
 <!--             <label for="exampleInputEmail1" required="required">Email address</label>
                <br> -->
