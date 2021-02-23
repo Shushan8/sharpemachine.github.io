@@ -3,7 +3,7 @@ layout: page
 title: Contact
 permalink: /contact/
 ---
-<form accept-charset="UTF-8" action=" https://sharpemachine.github.io//{noreply@github.com}" method="POST" enctype="multipart/form-data" target="_blank">
+<form accept-charset="UTF-8" action=" https://sharpemachine.github.io//{hayk.grigoryan@sharpemachine.com}" method="POST" enctype="multipart/form-data" target="_blank">
           <div class="form-group">
 <!--              <label for="exampleInputName">Name</label> 
                <br>  -->
