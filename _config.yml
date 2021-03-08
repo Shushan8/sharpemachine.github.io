@@ -20,6 +20,10 @@
 
 title: SHARPEMACHINE, LLC
 email: hayk.grigoryan@sharpemachine.com
+twitter_username          : jekyllrb
+linkedin_username        : NadyaKostanyan
+facebook_username         : HaykGrigoryan
+github_username           : sharpemachine
 description: >- # this means to ignore newlines until "baseurl:"
   Performance figures contained herein are hypothetical, 
   unaudited and prepared by SHARPEMACHINE, LLC; 
@@ -30,10 +34,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   financial instruments.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://sharpemachine.com" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username          : jekyllrb
-linkedin_username        : NadyaKostanyan
-facebook_username         : HaykGrigoryan
-github_username           : sharpemachine
+
 
 # Build settings
 theme: minima
