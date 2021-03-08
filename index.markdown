@@ -5,6 +5,3 @@
 layout: home
 ---
 
-{% if site.google_analytics and jekyll.environment == 'production' %}
-{% include analytics.html %}
-{% endif %}
