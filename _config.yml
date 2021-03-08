@@ -19,11 +19,11 @@
 # in the templates via {{ site.myvariable }}.
 
 title: SHARPEMACHINE, LLC
-email: "hayk.grigoryan@sharpemachine.com"
-twitter          : "twitter"
-linkedin         : "linkedin"
-facebook         : "facebook"
-github           : "github"
+email: hayk.grigoryan@sharpemachine.com
+twitter          : jekyllrb
+linkedin         : NadyaKostanyan
+facebook         : HaykGrigoryan
+github           : sharpemachine
 description: >- # this means to ignore newlines until "baseurl:"
   Performance figures contained herein are hypothetical, 
   unaudited and prepared by SHARPEMACHINE, LLC; 
