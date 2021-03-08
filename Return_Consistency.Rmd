@@ -170,3 +170,6 @@ $$
 
 To sum up, a rule of thumb is that portfolios with lower volatility are better as they provide more stable, higher returns and less chance of overtrading and other actions triggered by emotional reaction. 
 
+  {%- if site.disqus.shortname -%}
+    {%- include disqus_comments.html -%}
+  {%- endif -%}
