@@ -8,5 +8,4 @@ author: Hayk Grigoryan, CFA
 
 {% include Return_Consistency.html %}
 
-    {% include disqus_comments.html %}
  
