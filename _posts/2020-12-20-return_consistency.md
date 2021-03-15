@@ -7,5 +7,9 @@ author: Hayk Grigoryan, CFA
 ---
 
 {% include Return_Consistency.html %}
+  {%- if site.disqus.shortname -%}
+    {%- include disqus_comments.html -%}
+  {%- endif -%}
+
 
  
