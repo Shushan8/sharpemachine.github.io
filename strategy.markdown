@@ -3,6 +3,7 @@ layout: page
 title: Our Strategy
 permalink: /strategy/
 ---
+<img src="img/IMG_35.jpg"  >
 
 SharpeMachine system is completely automatic trading strategy with careful design to harness weak signals in the equity markets spanning over the decades of financial data. The system tries to capture the best performing factors over different market regimes and build a diversified portfolio taking into account the uncertainty of the future regimes and best performing equity factors. 
 
